@@ -41,7 +41,7 @@ install_requires = [
     "Babel>=2.9.0",
     "billiard>=3.6.3.0",
     "blinker>=1.4",
-    "celery>=5.0.2",
+    "celery==4.4.6",
     "certifi>=2020.11.8",
     "chardet>=3.0.4",
     "click>=7.1.2",
