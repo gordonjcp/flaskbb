@@ -78,6 +78,8 @@ def create_app(config=None, instance_path=None):
                    For example, if the config is specified via an file
                    and a ENVVAR, it will load the config via the file and
                    later overwrite it from the ENVVAR.
+                   If no config is provided, FlaskBB will try to load the
+                   config named ``flaskbb.cfg`` from the instance path.
     """
 
     app = Flask(
@@ -128,6 +130,24 @@ def configure_app(app, config):
     # them on the config object
     app_config_from_env(app, prefix="FLASKBB_")
 
+    # Migrate Celery 4.x config to Celery 6.x
+    old_celery_config = app.config.get_namespace('CELERY_')
+    celery_config = {}
+    for key, value in old_celery_config.items():
+        # config is the new format
+        if key != "config":
+            config_key = f"CELERY_{key.upper()}"
+            celery_config[key] = value
+            try:
+                del app.config[config_key]
+            except KeyError:
+                pass
+
+    # merge the new config with the old one
+    new_celery_config = app.config.get("CELERY_CONFIG")
+    new_celery_config.update(celery_config)
+    app.config.update({"CELERY_CONFIG": new_celery_config})
+
     # Setting up logging as early as possible
     configure_logging(app)
 
@@ -168,8 +188,7 @@ def configure_app(app, config):
 
 def configure_celery_app(app, celery):
     """Configures the celery app."""
-    app.config.update({"BROKER_URL": app.config["CELERY_BROKER_URL"]})
-    celery.conf.update(app.config)
+    celery.conf.update(app.config.get("CELERY_CONFIG"))
 
     TaskBase = celery.Task
 
