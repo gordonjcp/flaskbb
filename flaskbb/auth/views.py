@@ -96,7 +96,7 @@ class Login(MethodView):
                     identifier=form.login.data, secret=form.password.data
                 )
                 login_user(user, remember=form.remember_me.data)
-                return redirect_or_next(url_for("forum.index"))
+                return redirect_or_next(url_for("forum.index"), use_referrer=False)
             except StopAuthentication as e:
                 flash(e.reason, "danger")
             except Exception:
@@ -128,7 +128,7 @@ class Reauth(MethodView):
                 )
                 confirm_login()
                 flash(_("Reauthenticated."), "success")
-                return redirect_or_next(current_user.url)
+                return redirect_or_next(current_user.url, use_referrer=False)
             except StopAuthentication as e:
                 flash(e.reason, "danger")
             except Exception:
